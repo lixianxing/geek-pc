@@ -1,6 +1,10 @@
-import {http} from './http'
-
+import { http } from './http'
+import { isAuth, getToken, setToken, clearToken } from './token'
 export {
-  http
+  http,
+  isAuth,
+  getToken,
+  setToken,
+  clearToken
 }
 
