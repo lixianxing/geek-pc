@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { getToken } from './token'
 import { history } from './history'
+import { message } from 'antd'
 const http = axios.create({
   baseURL: 'http://geek.itheima.net/v1_0',
   timeout: 5000
@@ -29,6 +30,7 @@ http.interceptors.response.use((response)=> {
   // 对响应错误做点什么
   if(error.response.status === 401) {
     history.push('/login')
+    message.error('token已失效')
   }
   return Promise.reject(error.response.data)
 })
