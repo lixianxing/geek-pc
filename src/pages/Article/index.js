@@ -1,15 +1,15 @@
-import { Link } from 'react-router-dom'
-import { Card, Breadcrumb, Form, Button, Radio, DatePicker, Select, Table, Tag, Space } from 'antd'
+import { Link, useNavigate } from 'react-router-dom'
+import { Card, Breadcrumb, Form, Button, Radio, DatePicker, Select, Table, Tag, Space, Popconfirm, message } from 'antd'
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import 'moment/locale/zh-cn'
 import locale from 'antd/es/date-picker/locale/zh_CN'
 import img404 from '@/assets/error.png'
 import { useState, useEffect } from 'react'
 import { http } from '@/utils'
-import { values } from 'mobx'
+import './index.scss'
 
 const Article = () => {
-
+  const navigate = useNavigate()
   // 获取频道列表
   const [channels, setChannels] = useState([])
 
@@ -30,7 +30,7 @@ const Article = () => {
   // 参数管理
   const [params, setParams] = useState({
     page: 1,
-    per_page: 10
+    per_page: 10,
   })
 
   // 发送接口请求
@@ -49,25 +49,49 @@ const Article = () => {
   // 筛选
   const onSearch = values => {
     const { status, channel_id, date } = values
-     // 格式化表单数据
-     const _params = {}
-     if (status !== -1) {
-       _params.status = status
-     }
-     if (channel_id) {
-       _params.channel_id = channel_id
-     }
-     if (date) {
-       _params.begin_pubdate = date[0].format('YYYY-MM-DD')
-       _params.end_pubdate = date[1].format('YYYY-MM-DD')
-     }
-     // 修改params参数 触发接口再次发起
-     setParams({
-        ...params,
-        ..._params
-     })
+    // 格式化表单数据
+    const _params = {}
+    if (status !== -1) {
+      _params.status = status
+    }
+    if (channel_id) {
+      _params.channel_id = channel_id
+    }
+    if (date) {
+      _params.begin_pubdate = date[0].format('YYYY-MM-DD')
+      _params.end_pubdate = date[1].format('YYYY-MM-DD')
+    }
+    // 修改params参数 触发接口再次发起
+    setParams({
+      ...params,
+      ..._params
+    })
   }
-// 表格列
+
+  // 分页
+  const pageChange = (page, size) => {
+    setParams({
+      ...params,
+      page,
+      per_page: size
+    })
+  }
+  // 删除回调
+  const delArticle = async (data) => {
+    try {
+      let res = await http.delete(`/mp/articles/${data.id}`)
+      // 更新列表
+      setParams({
+        page: 1,
+        per_page: 10
+      })
+      message.success(res.message)
+    } catch (e) {
+      message.error(`${e.response.statusText} ${e.response.status}`)
+    }
+
+  }
+  // 表格列
   const columns = [
     {
       title: '封面',
@@ -108,20 +132,26 @@ const Article = () => {
       render: data => {
         return (
           <Space size="middle">
-            <Button type="primary" shape="circle" icon={<EditOutlined />} />
-            <Button
-              type="primary"
-              danger
-              shape="circle"
-              icon={<DeleteOutlined />}
-            />
+            <Button type="primary" shape="circle" icon={<EditOutlined />} onClick={() => navigate(`/publish?id=${data.id}`)} />
+            <Popconfirm
+              title="确认删除该条文章吗?"
+              onConfirm={() => delArticle(data)}
+              okText="确认"
+              cancelText="取消"
+            >
+              <Button
+                type="primary"
+                danger
+                shape="circle"
+                icon={<DeleteOutlined />}
+              />
+            </Popconfirm>
+
           </Space>
         )
       }
     }
   ]
-
-
   return (
     <div>
       <Card
@@ -135,10 +165,10 @@ const Article = () => {
         }
         style={{ marginBottom: 20 }}
       >
-        <Form onFinish={ onSearch }>
-          <Form.Item label="状态" name="status">
-            <Radio.Group>
-              <Radio value={null}>全部</Radio>
+        <Form onFinish={onSearch} initialValues={{ channel_id: 0, status: '' }}>
+          <Form.Item label="状态" name="status" >
+            <Radio.Group >
+              <Radio value={''}>全部</Radio>
               <Radio value={0}>草稿</Radio>
               <Radio value={1}>待审核</Radio>
               <Radio value={2}>审核通过</Radio>
@@ -149,7 +179,6 @@ const Article = () => {
           <Form.Item label="频道" name="channel_id">
             <Select
               placeholder="请选择文章频道"
-              defaultValue="lucy"
               style={{ width: 120 }}
             >
               {
@@ -160,7 +189,7 @@ const Article = () => {
           </Form.Item>
 
           <Form.Item label="日期" name="date">
-            <DatePicker.RangePicker locale={locale}  />
+            <DatePicker.RangePicker locale={locale} />
           </Form.Item>
 
           <Form.Item >
@@ -170,7 +199,14 @@ const Article = () => {
       </Card>
 
       <Card title={`根据筛选条件共查询到 ${article.list.length} 条结果：`}>
-        <Table rowKey="id" columns={columns} dataSource={article.list} />
+        <Table rowKey="id" columns={columns} dataSource={article.list} pagination={{
+          position: ['bottomCenter'],
+          showTotal: () => `共${article.count}条`,
+          current: params.page,
+          pageSize: params.per_page,
+          total: article.count,
+          onChange: (current, size) => pageChange(current, size)
+        }} />
       </Card>
     </div>
   )

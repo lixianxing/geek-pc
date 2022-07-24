@@ -32,7 +32,7 @@ http.interceptors.response.use((response)=> {
     history.push('/login')
     message.error('token已失效')
   }
-  return Promise.reject(error.response.data)
+  return Promise.reject(error)
 })
 
 

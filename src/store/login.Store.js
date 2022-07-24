@@ -1,4 +1,4 @@
-import { makeAutoObservable } from 'mobx'
+import { makeAutoObservable, runInAction } from 'mobx'
 import { getToken, http, setToken, clearToken } from '@/utils'
 class LoginStore {
   token = getToken() || ''
@@ -13,10 +13,13 @@ class LoginStore {
       code
     })
 
-    // 存入token
-    this.token = res.data.token
-    // 存入ls
-    setToken(this.token)
+    runInAction(() => {
+      // 存入token
+      this.token = res.data.token
+      // 存入ls
+      setToken(this.token)
+    })
+
   }
 
   loginOut = () => {

@@ -27,7 +27,7 @@ function Pie({ style, data, title}) {
   const nodeRef = useRef(null)
   useEffect(() => {
     echartInit(nodeRef.current, data, title)
-  }, [data])
+  }, [data, title])
 
   return (
     <div ref={nodeRef} style={style}></div>

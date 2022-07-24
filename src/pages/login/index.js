@@ -19,7 +19,7 @@ function Login() {
       // 消息提示
       message.success('登入成功')
     } catch(e) {
-      message.error(e?.message || '登入失败')
+      message.error(e?.response?.data?.message || '登入失败')
     }
 
   };

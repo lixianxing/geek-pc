@@ -1,6 +1,6 @@
 import { http } from "@/utils"
 
-import { makeAutoObservable } from "mobx"
+import { makeAutoObservable, runInAction } from "mobx"
 
 class UserStore {
 
@@ -12,9 +12,10 @@ class UserStore {
 
   async getUserInfo() {
     const res = await http.get('/user/profile')
-    this.userInfo = res.data
+    runInAction(() => {
+      this.userInfo = res.data
+    })
   }
-
 
 }
 
